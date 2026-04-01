@@ -31,8 +31,6 @@
             width: 100%;
             padding: 10px;
             margin: 10px 0;
-            border-radius: 5px;
-            border: 1px solid #ccc;
         }
 
         button {
@@ -41,23 +39,10 @@
             background: #4facfe;
             color: white;
             border: none;
-            border-radius: 5px;
-            cursor: pointer;
         }
 
-        button:hover {
-            background: #007bff;
-        }
-
-        .success {
-            color: green;
-            text-align: center;
-        }
-
-        .error {
-            color: red;
-            text-align: center;
-        }
+        .success { color: green; text-align: center; }
+        .error { color: red; text-align: center; }
     </style>
 </head>
 
@@ -74,18 +59,38 @@
 
     <?php
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
         $cid = $_POST['customer_id'];
         $amount = $_POST['amount'];
 
-        $sql = "INSERT INTO loans (customer_id, amount) VALUES ('$cid', '$amount')";
+        // TEMP: comment this if you don't have customers table
+        $result = $conn->query("SELECT balance FROM customers WHERE customer_id = '$cid'");
 
-        if ($conn->query($sql)) {
-            echo "<p class='success'>Loan Applied Successfully!</p>";
+        if ($result && $result->num_rows > 0) {
+
+            $row = $result->fetch_assoc();
+            $balance = $row['balance'];
+
+            if ($amount <= ($balance * 5)) {
+
+                $sql = "INSERT INTO loans (customer_id, amount) VALUES ('$cid', '$amount')";
+
+                if ($conn->query($sql)) {
+                    echo "<p class='success'>Loan Applied Successfully!</p>";
+                } else {
+                    echo "<p class='error'>Error: " . $conn->error . "</p>";
+                }
+
+            } else {
+                echo "<p class='error'>Loan exceeds allowed limit!</p>";
+            }
+
         } else {
-            echo "<p class='error'>Error: " . $conn->error . "</p>";
+            echo "<p class='error'>Customer not found!</p>";
         }
     }
     ?>
+
 </div>
 
 </body>
